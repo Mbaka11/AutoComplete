@@ -120,3 +120,12 @@ div {
   font-size: 1.5em;
   font-weight: bold;
 }
+
+.suggestions {
+  display: block;
+  width: 100%;
+  margin-left: 13px;
+  font-family: inherit;
+  background-color: seashell;
+  color: black;
+}

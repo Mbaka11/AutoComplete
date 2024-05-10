@@ -115,6 +115,27 @@ def get_results():
 
     return jsonify(body['hits']['hits'])
 
+@app.route('/location-suggestions', methods=['GET'])
+def get_suggestions():
+    location = request.args.get('location')
+    body = es.search(
+        index="earthquakes",
+        body={
+            "size": 0,
+            "aggs": {
+                "locations": {
+                    "terms": {
+                        "field": "place.keyword",
+                        "size": 10,
+                        "include": f".*{location}.*"
+                    }
+                }
+            }
+        }
+    )
+    
+    return jsonify(body['aggregations']['locations']['buckets'])
+
 # Run the server
 if __name__ == '__main__':
     # app.run(debug=True)

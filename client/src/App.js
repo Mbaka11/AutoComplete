@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 const App = () => {
@@ -9,6 +9,43 @@ const App = () => {
   const [chosenDateRange, setChosenDateRange] = useState(null);
   const [chosenSortOption, setchosenSortOption] = useState(null);
   const [documents, setDocuments] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      try {
+        const result = await sendLocationSuggestionsRequest();
+        if (result) {
+          setSuggestions(result.map((bucket) => bucket.key));
+          console.log("suggestions", suggestions);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchSuggestions();
+  }, [chosenLocation]);
+
+  const sendLocationSuggestionsRequest = (location) => {
+    const params = {};
+    if (chosenLocation) params.location = chosenLocation;
+
+    const results = {
+      method: "GET",
+      url: "http://localhost:5000/location-suggestions",
+      params,
+    };
+
+    return axios
+      .request(results)
+      .then((response) => {
+        return response.data;
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
 
   const sendSearchRequest = () => {
     const params = {};
@@ -24,10 +61,10 @@ const App = () => {
       url: "http://localhost:5000/results",
       params,
     };
+
     axios
       .request(results)
       .then((response) => {
-        console.log(response.data);
         setDocuments(response.data);
       })
       .catch((error) => {
@@ -43,7 +80,6 @@ const App = () => {
         </ul>
       </nav>
       <p className="directions">
-        {" "}
         Search for earthquakes using the following criteria:
       </p>
       <div className="main">
@@ -89,10 +125,31 @@ const App = () => {
                     type="text"
                     placeholder="Enter city, state, country"
                     value={chosenLocation}
-                    onChange={(e) => setChosenLocation(e.target.value)}
+                    onChange={(e) => {
+                      setChosenLocation(e.target.value);
+                    }}
                   />
                 </label>
               </form>
+              {suggestions.length > 0 && (
+                <button onClick={() => setShowSuggestions(!showSuggestions)}>
+                  {showSuggestions ? "Hide Suggestions" : "Show Suggestions"}
+                </button>
+              )}
+              {suggestions.length > 0 && showSuggestions && (
+                <div className="suggestions">
+                  {suggestions.map((suggestion) => (
+                    <p
+                      onClick={() => {
+                        setChosenLocation(suggestion);
+                        setShowSuggestions(false);
+                      }}
+                    >
+                      {suggestion}
+                    </p>
+                  ))}
+                </div>
+              )}
             </li>
             <li>
               <select
